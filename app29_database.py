@@ -255,6 +255,12 @@ def view_results():
     # Display results in table
     st.dataframe(df)
 
+ # Visualize the distribution of classifications
+    classification_counts = df['Classification'].value_counts()
+    st.bar_chart(classification_counts)
+
+
+
 def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox("Go to", ["Main Menu", "Prediction", "Result", "View Results"])
@@ -270,3 +276,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+   #view_results()
