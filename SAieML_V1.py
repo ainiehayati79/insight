@@ -183,7 +183,12 @@ def prediction_page():
     st.write("## User Details")
     st.write("Please fill out the following about how your child usually is. Please try to answer every question")
     name = st.text_input("Name:")
-    age = st.number_input("Age in months:")
+     # Dropdown menu for age
+    age = st.selectbox(
+        "Age range of your child:",
+        ["1-4 (Toddlers)", "5-12 (Children)"]
+    )
+    
     gender = st.radio("Gender", ['Female', 'Male'])
 
     # List of states in Malaysia
