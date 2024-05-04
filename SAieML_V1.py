@@ -162,11 +162,17 @@ def get_classification(total_score):
 
 def main_menu():
 
-    st.title("Simplified Autism Screening with Integrated Expert Insight using Machine Learning (SAieML)")
-    st.write("Welcome to the Autism Traits Predictor.")
-    st.write("Please select an option from the navigation menu on the left and click Prediction.")
-    st.image("SAiEML2.jpg", use_column_width=True)
+    #st.title("Simplified Autism Screening with Integrated Expert Insight using Machine Learning (SAieML)")
+    st.markdown(
+        "<div style='text-align: center;'>"
+        "<h1>Simplified Autism Screening with Integrated Expert Insight using Machine Learning (SAieML).</h1>"
+        "<p>Please select an option from the navigation menu on the left and click Prediction.</p>"
+        "</div>",
+        unsafe_allow_html=True
+    )
+    st.image("SAiEML5.jpg", use_column_width=True)
 
+    
 def insert_result(name, age, gender, state, classification, *scores):
     # Compute the total score
     total_score = sum(score_mappings[q][score] * expert_weights[expert] for q, score in zip(questions, scores) for expert in expert_weights if score in score_mappings[q])
@@ -291,7 +297,13 @@ def dashboard_page():
         # Visualize the distribution of classifications
         classification_counts = df['Classification'].value_counts()
         st.bar_chart(classification_counts)
-    
+        
+         # Visualize state distribution
+        st.write("### State Distribution")
+        state_counts = df['State'].value_counts()
+        st.bar_chart(state_counts)
+      
+     
     # Check if there are any new results
     if 'last_row_count' not in st.session_state:
         st.session_state.last_row_count = len(rows)
@@ -305,13 +317,20 @@ def dashboard_page():
         st.rerun()
 
 
+
 def main():
     st.sidebar.title("Navigation")
     page = st.sidebar.selectbox("Go to", ["Main Menu", "Prediction", "Result", "Dashboard"])
-    st.sidebar.caption("This app is to predict the autism traits built using machine learning and integrated with experts.The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results.")
-    st.sidebar.caption("Wish to connect at zaifa@umpsa.edu.my, ainiehayatinoruzman@gmail.com")
+    #st.sidebar.caption("Welcome to the Autism Traits Predictor. This app is to predict the autism traits built using machine learning and integrated with experts.The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results.")
+    st.sidebar.caption(
+    "<div style='text-align: justify;'>"
+    "Welcome to the Autism Traits Predictor. This app is to predict the autism traits built using machine learning and integrated with experts. The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results."
+    "</div>",
+    unsafe_allow_html=True
+  )
     st.sidebar.image("umpsa.png", use_column_width=True)
     st.sidebar.image("psis2019.png", use_column_width=True)
+
 
     if page == "Main Menu":
         main_menu()
@@ -322,6 +341,11 @@ def main():
     elif page == "Dashboard":
         dashboard_page()
 
+    # Footer
+    st.markdown("""<div style='text-align: center; margin-top: 50px;'>
+    <p style='font-size: 14px;'><b>SAieML: Developed by [Ts. Ainie Hayati Noruzman][ainie_hayati@psis.edu.my]©[2024]</p>""", unsafe_allow_html=True)
+
+
 if __name__ == "__main__":
     main()      
-    
+      
