@@ -104,7 +104,7 @@ score_mappings = {
         'less than once a week': 3,
         'never': 4
     },
-    'Does your twiddle objects repetitively (e.g. pieces of string)?': {
+    'Does your child twiddle objects repetitively (e.g. pieces of string)?': {
         'many times a day': 4,
         'a few times a day': 3,
         'a few times a week': 2,
