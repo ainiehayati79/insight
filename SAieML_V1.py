@@ -127,7 +127,7 @@ questions = [
     'Does your child do the same thing over and over again (e.g. running the tap, turning the light switch on and off, opening and closing doors)?',
     'Would you describe your childs first words as:',
     'Does your child use simple gestures (e.g. wave goodbye)?',
-    'Does your twiddle objects repetitively (e.g. pieces of string)?'
+    'Does your child twiddle objects repetitively (e.g. pieces of string)?'
 ]
 
 # Results provided by the experts
@@ -144,7 +144,7 @@ items = [
     ['Q16','Does your child do the same thing over and over again (e.g. running the tap, turning the light switch on and off, opening and closing doors)?', 'High'],
     ['Q17','Would you describe your childs first words as:', 'Medium'],
     ['Q19','Does your child use simple gestures (e.g. wave goodbye)?'	, 'Medium'],
-    ['Q23','Does your twiddle objects repetitively (e.g. pieces of string)?', 'High']
+    ['Q23','Does your child twiddle objects repetitively (e.g. pieces of string)?', 'High']
 ]
 # Connect to the SQLite database
 conn = sqlite3.connect('results.db')
