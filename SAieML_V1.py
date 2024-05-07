@@ -245,7 +245,6 @@ def prediction_page():
         st.write("## Prediction Completed")
         st.write("Prediction is completed. Please click 'Result' in the navigation bar to view the result.")
 
-
 def result_page():
     st.write("## Result")
     if 'total_score' in st.session_state:
@@ -257,22 +256,36 @@ def result_page():
         # Set the box color based on classification
         box_color = 'blue' if st.session_state.classification == "No autism" else ('green' if st.session_state.classification == "Yes, autism with low traits" else 'red')
         
-        st.markdown(f"<div style='border: 2px solid {box_color}; padding: 10px'>{st.session_state.classification}</div>", unsafe_allow_html=True)
+        # Define font size for the box
+        font_size = '24px' if st.session_state.classification in ["Yes, autism with high traits.", "Yes, autism with medium traits."] else '16px'
 
+        # Add additional statements
+        additional_statement = ""
+        if st.session_state.classification == "No autism":
+          additional_statement = "**No further action required.**"
+        elif st.session_state.classification == "Yes, autism with low traits":
+          additional_statement = "**No further action required unless ongoing surveillance indicates risk for ASD.**"
+        elif st.session_state.classification == "Yes, autism with high traits":
+         additional_statement = "**Please refer immediately to see a psychiatrist for diagnostic evaluation and early intervention.**"
+        elif st.session_state.classification == "Yes, autism with medium traits":
+          additional_statement = "**Please refer for diagnostic evaluation and eligibility evaluation for early intervention.**"
+
+        st.markdown(f"<div style='border: 2px solid {box_color}; padding: 10px; font-size: {font_size}'>{st.session_state.classification}<br>{additional_statement}</div>", unsafe_allow_html=True)
+        st.divider()
+        
         if st.session_state.classification != "No autism":
+            st.write("### Features Identified by Experts")
             high_trait_features = [item[1] for item in items if item[2] == 'High']
+            if high_trait_features:
+                st.write("**Traits with high relevance identified by experts:**")
+                for feature in high_trait_features:
+                    st.write(f"- {feature}")
+            else:
+                st.write("No features identified by experts.")
 
-            fig, ax = plt.subplots(figsize=(8, 6))  # Increase the figure size here
-            ax.barh(high_trait_features, [3] * len(high_trait_features))
-            ax.set_xlabel('Relevance Level')
-            ax.set_title('Features Identified by Experts')
-            ax.invert_yaxis()
-            ax.xaxis.tick_top()
-            plt.xticks([1, 2, 3], ['Low', 'Medium', 'High'])
-            plt.tight_layout()
-            st.pyplot(fig)
     else:
         st.write("Make a prediction first.")
+
 
 def dashboard_page():
     st.write("## Real-time Dashboard")
@@ -348,4 +361,4 @@ def main():
 
 if __name__ == "__main__":
     main()      
-      
+        
