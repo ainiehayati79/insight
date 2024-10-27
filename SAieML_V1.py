@@ -153,7 +153,7 @@ items = [
 
 def create_connection():
     # Retrieve DATABASE_URL from environment, use external or internal URL as appropriate
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://insights_of73_user:U6d4XFIQC0npAzKsvXm7xekNjtUXJIsz@dpg-cset40jtq21c738gm9ig-a.oregon-postgres.render.com/insights_of73")
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://quickscreen_user:gFKXmyrBnQPtad3OS3s1AehpJJdkPoJA@dpg-csf1f8u8ii6s739abkf0-a.oregon-postgres.render.com/quickscreen")
     return psycopg2.connect(DATABASE_URL)
 
 
@@ -169,27 +169,31 @@ def get_classification(total_score):
     else:
         return "No autism"
 
+
 def main_menu():
+    # Title only appears on the main (login) page
     st.markdown(
-        "<div style='text-align: center;'>"
-        "<h1>Simplified Autism Screening with Integrated Expert Insight using Machine Learning (SAieML).</h1>"
-        "<p>Please select an option from the navigation menu on the left and click Prediction.</p>"
-        "</div>",
+        """
+        <div style='text-align: center; background-color: #97dddf; padding: 6px;border-radius: 10px;'>
+        <h1 style='color: #1b21a0;'>QuickScreen: Expert-Guided Autism Insight</h1>
+        </div>
+        """,
         unsafe_allow_html=True
     )
-    st.image("SAiEML5.jpg", use_column_width=True)
 
-def insert_result(name, age, gender, state, classification, *scores):
-    total_score = sum(
-        score_mappings[q][score] * expert_weights[expert]
-        for q, score in zip(questions, scores)
-        for expert in expert_weights
-        if score in score_mappings[q]
-    )
+    
+    # Add space with a margin
+    st.markdown("<div style='margin-bottom: 30px;'></div>", unsafe_allow_html=True)
+    
+    st.image("SAiEML6.png", use_column_width=True)
+   
 
-    # Use `with closing(create_connection())` to manage connection
+
+def insert_result(name, age, gender, state, classification, total_score, diagnosis, *scores):
+    # Use with closing to manage connection
     with closing(create_connection()) as conn:
         with conn.cursor() as c:
+            # Ensure Diagnosis is the last column in the table definition
             c.execute('''
                 CREATE TABLE IF NOT EXISTS results (
                     name TEXT, 
@@ -210,27 +214,29 @@ def insert_result(name, age, gender, state, classification, *scores):
                     Q10 TEXT, 
                     Q11 TEXT, 
                     Q12 TEXT, 
-                    Q13 TEXT
+                    Q13 TEXT,
+                    diagnosis TEXT
                 )
-        ''')
-
+            ''')
+            # Insert data including diagnosis
             c.execute(
                 '''
-                INSERT INTO results (name, age, gender, state, classification, total_score, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO results (name, age, gender, state, classification, total_score, Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, diagnosis)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ''',
-                (name, age, gender, state, classification, total_score, *scores)
+                (name, age, gender, state, classification, total_score, *scores, diagnosis)
             )
             conn.commit()
 
-def prediction_page():
-    st.write('## Please rate the following traits based on the observed behavior.')
-    st.write("## User Details")
-    st.write("Please fill out the following about how your child usually is. Please try to answer every question")
 
+def prediction_page():
+    st.write("## Toddler Details")
+    st.write("Please fill out the following about how your child usually is. Answer all questions")
+
+    # Basic input details
     name = st.text_input("Name:")
     age = st.selectbox("Age range of your child:", ["1-4 (Toddlers)", "5-12 (Children)"])
-    gender = st.radio("Gender", ['Female', 'Male'])
+    gender = st.radio("Gender:", ['Female', 'Male'])
     states_malaysia = [
         "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
         "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
@@ -238,6 +244,7 @@ def prediction_page():
     ]
     selected_state = st.selectbox("Select a state in Malaysia:", states_malaysia)
 
+    st.write('## Please rate the following traits based on the observed behavior.')
     st.divider()
     scores = []
     for i, item in enumerate(items, start=1):
@@ -248,6 +255,23 @@ def prediction_page():
             score = st.radio("Select the trait level:", trait_levels, key=f'radio_{i}')
             scores.append(score)
 
+    # Capture diagnosis as input (no need to set in st.session_state)
+    #diagnosis = st.radio("Has your child been properly screened/diagnosed with Autism before?", ["Yes", "No"], key="diagnosis")
+
+
+    # Display alert message with custom styling
+    st.markdown(
+        """
+        <div style='padding: 10px; border: 2px solid red; background-color: #f8d7da; color: #721c24; border-radius: 5px; margin-bottom: 10px;'>
+            <strong>IMPORTANT!</strong> Has your child been properly screened/diagnosed with Autism before?
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Capture diagnosis as input (no need to set in st.session_state)
+    diagnosis = st.radio("Diagnosis Status", ["Yes", "No"], key="diagnosis")
+
     if st.button('Predict'):
         total_score = sum(
             score_mappings[q][score] * expert_weights[expert]
@@ -256,8 +280,9 @@ def prediction_page():
             if score in score_mappings[q]
         )
         classification = get_classification(total_score)
-        insert_result(name, age, gender, selected_state, classification, *scores)
+        insert_result(name, age, gender, selected_state, classification, total_score, diagnosis, *scores)
 
+        # Set other values in session state (excluding diagnosis)
         st.session_state.name = name
         st.session_state.age = age
         st.session_state.gender = gender
@@ -267,6 +292,8 @@ def prediction_page():
 
         st.write("## Prediction Completed")
         st.write("Prediction is completed. Please click 'Result' in the navigation bar to view the result.")
+
+
 
 def result_page():
     st.write("## Result")
@@ -307,10 +334,11 @@ def dashboard_page():
             c.execute('SELECT * FROM results')
             rows = c.fetchall()
             df = pd.DataFrame(rows, columns=[
-                'Name', 'Age', 'Gender', 'State', 'Classification',
-                'total_score', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 
-                'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13'
+                'Name', 'Age', 'Gender', 'State', 'Classification', 'total_score', 
+                'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13', 'Diagnosis'
             ])
+
+           
     df['total_score'] = pd.to_numeric(df['total_score'], errors='coerce')
     dashboard_placeholder = st.empty()
     with dashboard_placeholder.container():
@@ -326,7 +354,7 @@ def main():
     page = st.sidebar.selectbox("Go to", ["Main Menu", "Prediction", "Result", "Dashboard"])
     st.sidebar.caption(
         "<div style='text-align: justify;'>"
-        "Welcome to the Autism Traits Predictor. This app is to predict the autism traits built using machine learning and integrated with experts. The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results."
+        "Welcome to the Quick Screen Autism Traits Predictor. This app is to predict the autism traits built using machine learning and integrated with experts. The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results."
         "</div>",
         unsafe_allow_html=True
     )
@@ -342,7 +370,16 @@ def main():
     elif page == "Dashboard":
         dashboard_page()
 
-    st.markdown("""<div style='text-align: center; margin-top: 50px;'><p style='font-size: 14px;'><b>SAieML: Developed by [Ts. Ainie Hayati Noruzman][ainie_hayati@psis.edu.my]©[2024]</p></div>""", unsafe_allow_html=True)
+   # st.markdown("""<div style='text-align: center; margin-top: 50px;'><p style='font-size: 14px;'><b>SAieML: Developed by [Ts. Ainie Hayati Noruzman][ainie_hayati@psis.edu.my]©[2024]</p></div>""", unsafe_allow_html=True)
+
+    st.markdown(
+    """ <div style='text-align: center; background-color: rgba(75, 75, 75, 0.5); padding: 2px; border: 2px solid #A6A6A6; border-radius: 5px; margin-top: 15px;'>
+    <p style='color: white;'>© 2024 QuickScreen: Expert-Guided Autism Insight.[ainie_hayati@psis.edu.my] All rights reserved.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+    
 
 if __name__ == "__main__":
     main()
