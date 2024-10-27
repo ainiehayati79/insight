@@ -270,7 +270,11 @@ def prediction_page():
     )
 
     # Capture diagnosis as input (no need to set in st.session_state)
-    diagnosis = st.radio("Diagnosis Status", ["Yes", "No"], key="diagnosis")
+    diagnosis = st.radio("Diagnosis Status", ["Yes, my child has been screened/diagnosed with autism.", 
+                                              "No, my child was screened, but no autism was found.",
+                                              "No, my child has never been screened."], key="diagnosis")
+
+
 
     if st.button('Predict'):
         total_score = sum(
