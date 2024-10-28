@@ -230,8 +230,19 @@ def insert_result(name, age, gender, state, classification, total_score, diagnos
 
 
 def prediction_page():
-    st.write("## Toddler Details")
-    st.write("Please fill out the following about how your child usually is. Answer all questions")
+    st.markdown(
+    """
+    <div style="border: 1px solid #4B4B4B; padding: 10px; border-radius: 5px; background-color: #F9F9F9;">
+        <h4>Please fill out the following information based on your child's usual behavior.</h4>
+        <p>This page consists of two sections: <b>Section 1</b> covers your child's details, and <b>Section 2</b> includes quick screen autism questions.</p>
+        <p>Please ensure you answer all questions.</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+    st.write("## Section 1. Toddler Details")
+   # st.write("Please fill out the following about how your child usually is. Answer all questions")
 
     # Basic input details
     name = st.text_input("Name:")
@@ -243,9 +254,10 @@ def prediction_page():
         "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan"
     ]
     selected_state = st.selectbox("Select a state in Malaysia:", states_malaysia)
-
-    st.write('## Please rate the following traits based on the observed behavior.')
     st.divider()
+    st.write('## Section 2. Quick screen autism questions.')
+    st.write('Please rate the following traits based on the observed behavior.')
+    #st.divider()
     scores = []
     for i, item in enumerate(items, start=1):
         st.subheader(f'{item[0]}: {item[1]}')
@@ -270,9 +282,10 @@ def prediction_page():
     )
 
     # Capture diagnosis as input (no need to set in st.session_state)
-    diagnosis = st.radio("Diagnosis Status", ["Yes, my child has been screened/diagnosed with autism.", 
+    diagnosis = st.radio("Diagnosis Status:", ["Yes, my child has been screened/diagnosed with autism.", 
                                               "No, my child was screened, but no autism was found.",
-                                              "No, my child has never been screened."], key="diagnosis")
+                                              "Yes, my child has been screened, and I've been informed there may be a possibility of mild autism.",
+                                              "No, my child has never been screened.",], key="diagnosis")
 
 
 
@@ -294,8 +307,17 @@ def prediction_page():
         st.session_state.classification = classification
         st.session_state.total_score = total_score
 
-        st.write("## Prediction Completed")
-        st.write("Prediction is completed. Please click 'Result' in the navigation bar to view the result.")
+        #st.write("# Prediction Completed")
+        #st.write("### Prediction is complete. Please click 'Result' in the navigation bar to view your results.")
+        st.markdown(
+            """
+            <div style="border: 2px solid #4CAF50; padding: 15px; border-radius: 10px; background-color: #E6FFE6;">
+                <h1 style="color: #4CAF50;">Prediction Completed</h1>
+                <h3>Prediction is complete. Please click 'Result' in the navigation bar to view your results.</h3>
+            </div>
+            """,
+         unsafe_allow_html=True
+)
 
 
 
@@ -355,19 +377,19 @@ def dashboard_page():
 
 def main():
     st.sidebar.title("Navigation")
-    page = st.sidebar.selectbox("Go to", ["Main Menu", "Prediction", "Result", "Dashboard"])
+    page = st.sidebar.selectbox("Go to", ["Welcome", "Autism Prediction", "Result", "Dashboard"])
     st.sidebar.caption(
         "<div style='text-align: justify;'>"
-        "Welcome to the Quick Screen Autism Traits Predictor. This app is to predict the autism traits built using machine learning and integrated with experts. The goal is to provide a more efficient and simplified alternative to traditional autism screening and to support early decision making with reliable and accurate results."
+        "Welcome to the Quick Screen Autism Traits Predictor. This app is designed to predict autism traits using a machine learning model integrated with expert insights. Its goal is to offer a more efficient and simplified alternative to traditional autism screening, providing reliable and accurate results to support early decision-making."
         "</div>",
         unsafe_allow_html=True
     )
     st.sidebar.image("umpsa.png", use_column_width=True)
     st.sidebar.image("psis2019.png", use_column_width=True)
 
-    if page == "Main Menu":
+    if page == "Welcome":
         main_menu()
-    elif page == "Prediction":
+    elif page == "Autism Prediction":
         prediction_page()
     elif page == "Result":
         result_page()
