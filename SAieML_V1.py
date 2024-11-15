@@ -232,7 +232,7 @@ def insert_result(name, age, gender, state, classification, total_score, diagnos
 def prediction_page():
     st.markdown(
     """
-    <div style="border: 1px solid #4B4B4B; padding: 10px; border-radius: 5px; background-color: #F9F9F9;">
+    <div style="border: 2px solid #008080; padding: 10px; border-radius: 5px; background-color: #e0f7fa; font-size: 20px; color: #333;">
         <h4>Please fill out the following information based on your child's usual behavior.</h4>
         <p>This page consists of two sections: <b>Section 1</b> covers your child's details, and <b>Section 2</b> includes quick screen autism questions.</p>
         <p>Please ensure you answer all questions.</p>
@@ -240,6 +240,8 @@ def prediction_page():
     """,
     unsafe_allow_html=True
 )
+
+
 
     st.write("## Section 1. Toddler Details")
    # st.write("Please fill out the following about how your child usually is. Answer all questions")
@@ -289,7 +291,7 @@ def prediction_page():
 
 
 
-    if st.button('Predict'):
+    if st.button('Quick Screen'):
         total_score = sum(
             score_mappings[q][score] * expert_weights[expert]
             for q, score in zip(questions, scores)
@@ -308,30 +310,36 @@ def prediction_page():
         st.session_state.total_score = total_score
 
         #st.write("# Prediction Completed")
-        #st.write("### Prediction is complete. Please click 'Result' in the navigation bar to view your results.")
+        #st.write("### Prediction is complete. Please click 'Autism Result' in the navigation bar to view your results.")
         st.markdown(
             """
             <div style="border: 2px solid #4CAF50; padding: 15px; border-radius: 10px; background-color: #E6FFE6;">
                 <h1 style="color: #4CAF50;">Prediction Completed</h1>
-                <h3>Prediction is complete. Please click 'Result' in the navigation bar to view your results.</h3>
+                <h3>Prediction is complete. Please click 'Autism Result' in the navigation bar to view your results.</h3>
             </div>
             """,
          unsafe_allow_html=True
 )
-
-
+import streamlit as st
+from fpdf import FPDF
 
 def result_page():
-    st.write("## Result")
+    st.title("Autism Result")
+    
     if 'total_score' in st.session_state:
         st.write("Name:", st.session_state.name)
         st.write("Age:", st.session_state.age)
         st.write("Gender:", st.session_state.gender)
         st.write("State:", st.session_state.state)
 
-        box_color = 'blue' if st.session_state.classification == "No autism" else ('green' if st.session_state.classification == "Yes, autism with low traits" else 'red')
-        font_size = '24px' if st.session_state.classification in ["Yes, autism with high traits.", "Yes, autism with medium traits."] else '16px'
+        # Set color based on classification
+        box_color = 'green' if st.session_state.classification == "No autism" else \
+                   ('red' if st.session_state.classification == "Yes, autism with high traits" else 'orange')
         
+        # Set font size based on classification
+        font_size = '36px' if st.session_state.classification in ["Yes, autism with high traits", "Yes, autism with medium traits"] else '24px'
+        
+        # Additional statement based on classification
         additional_statement = ""
         if st.session_state.classification == "No autism":
             additional_statement = "**No further action required.**"
@@ -342,70 +350,312 @@ def result_page():
         elif st.session_state.classification == "Yes, autism with medium traits":
             additional_statement = "**Please refer for diagnostic evaluation and eligibility evaluation for early intervention.**"
 
-        st.markdown(f"<div style='border: 2px solid {box_color}; padding: 10px; font-size: {font_size}'>{st.session_state.classification}<br>{additional_statement}</div>", unsafe_allow_html=True)
+        # Display Result Box
+        st.markdown(f"""
+        <div style='
+            border: 4px solid {box_color}; 
+            background-color: #f8f9fa; 
+            padding: 20px; 
+            font-size: {font_size}; 
+            border-radius: 15px; 
+            text-align: center; 
+            font-weight: bold;
+            color: {box_color};
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        '>
+            <p>{st.session_state.classification}</p>
+            <p>{additional_statement}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.divider()
+
+        # Button to generate PDF
+        if st.button("Download Result as PDF"):
+            # Create PDF
+            pdf = FPDF()
+            pdf.set_auto_page_break(auto=True, margin=15)
+            pdf.add_page()
+
+            # Add title and content to PDF
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt="Autism Result", ln=True, align='C')
+            pdf.ln(10)
+            pdf.cell(200, 10, txt=f"Name: {st.session_state.name}", ln=True)
+            pdf.cell(200, 10, txt=f"Age: {st.session_state.age}", ln=True)
+            pdf.cell(200, 10, txt=f"Gender: {st.session_state.gender}", ln=True)
+            pdf.cell(200, 10, txt=f"State: {st.session_state.state}", ln=True)
+            pdf.cell(200, 10, txt=f"Classification: {st.session_state.classification}", ln=True)
+            pdf.cell(200, 10, txt=f"Additional Info: {additional_statement}", ln=True)
+
+            # Save the PDF to a file
+            pdf_output = "autism_result.pdf"
+            pdf.output(pdf_output)
+
+            # Offer the file for download
+            with open(pdf_output, "rb") as pdf_file:
+                st.download_button("Download PDF", pdf_file, file_name=pdf_output, mime="application/pdf")
+
+        #st.divider()
         
         if st.session_state.classification != "No autism":
-            st.write("### Features Identified by Experts")
+            #st.write("### Features Identified by Experts")
             high_trait_features = [item[1] for item in items if item[2] == 'High']
-            if high_trait_features:
-                st.write("**Traits with high relevance identified by experts:**")
-                for feature in high_trait_features:
-                    st.write(f"- {feature}")
+    
+        if high_trait_features:
+        # Using Streamlit's built-in Markdown with custom background
+            st.markdown("""
+        <div style="padding: 10px; background-color: #f0f8f8; border-left: 5px solid #008080;">
+        <p style="font-size: 16px; font-weight: bold; color: #008080;">Traits with high relevance identified by experts:</p>
+        """, unsafe_allow_html=True)
 
+        for feature in high_trait_features:
+            st.markdown(f"<p style='color: #4b4b4b; font-size: 14px;'>{feature}</p>", unsafe_allow_html=True)
+
+        st.markdown("</div>", unsafe_allow_html=True)
+
+def admin_page():
+    st.title("Admin Login")
+    st.markdown("<div style='margin-bottom: 20px;'>Please enter your admin credentials to access the Dashboard.</div>", unsafe_allow_html=True)
+
+    # Input fields for username and password
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    # Hardcoded admin credentials (replace with secure storage in production)
+    admin_credentials = {
+        "admin": "admin123"  # Username: admin, Password: admin123
+    }
+
+    # Login button
+    if st.button("Login"):
+        if username in admin_credentials and password == admin_credentials[username]:
+            st.session_state["authenticated"] = True
+            st.session_state["page"] = "Dashboard"  # Set page to Dashboard
+            st.success("Login successful! Redirecting to the Autism Dashboard.")
+            time.sleep(2)
+            st.rerun()   # Trigger a rerun to redirect to Dashboard
+        else:
+            st.error("Invalid username or password. Please try again.")
+    
 def dashboard_page():
-    st.write("## Real-time Dashboard")
-    with closing(create_connection()) as conn:
-        with conn.cursor() as c:
-            c.execute('SELECT * FROM results')
-            rows = c.fetchall()
-            df = pd.DataFrame(rows, columns=[
-                'Name', 'Age', 'Gender', 'State', 'Classification', 'total_score', 
-                'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13', 'Diagnosis'
-            ])
+    # Check if the user is authenticated
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        # Prompt for login if not authenticated
+        st.title("Admin Login")
+        st.markdown(
+            "<div style='margin-bottom: 20px;'>Please enter your admin credentials to access the Dashboard.</div>",
+            unsafe_allow_html=True,
+        )
 
-           
-    df['total_score'] = pd.to_numeric(df['total_score'], errors='coerce')
-    dashboard_placeholder = st.empty()
-    with dashboard_placeholder.container():
+        # Input fields for username and password
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+
+        # Hardcoded admin credentials (replace with secure storage in production)
+        admin_credentials = {
+            "admin": "admin123"  # Username: admin, Password: admin123
+        }
+
+        # Login button
+        if st.button("Login"):
+            if username in admin_credentials and password == admin_credentials[username]:
+                st.session_state["authenticated"] = True
+                st.success("Login successful! Redirecting to the Dashboard...")
+                st.experimental_rerun()  # Reload the app to show the Dashboard
+            else:
+                st.error("Invalid username or password. Please try again.")
+    else:
+        # Render the real-time Dashboard if authenticated
+        st.title("Real-time Dashboard")
+        st.write("Welcome to the admin dashboard!")
+        
+        with closing(create_connection()) as conn:
+            with conn.cursor() as c:
+                c.execute('SELECT * FROM results')
+                rows = c.fetchall()
+                df = pd.DataFrame(rows, columns=[
+                    'Name', 'Age', 'Gender', 'State', 'Classification', 'total_score', 
+                    'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13', 'Diagnosis'
+                ])
+
+        df['total_score'] = pd.to_numeric(df['total_score'], errors='coerce')
+        dashboard_placeholder = st.empty()
+        with dashboard_placeholder.container():
+            st.dataframe(df)
+
+            # Classification distribution
+            classification_counts = df['Classification'].value_counts()
+            st.bar_chart(classification_counts)
+
+            # State distribution
+            st.write("### State Distribution")
+            state_counts = df['State'].value_counts()
+            st.bar_chart(state_counts)
+
+import time
+import streamlit as st
+import pandas as pd
+from contextlib import closing
+
+# Assuming `create_connection()` is already defined to connect to your database
+# You might need to adjust the connection setup if necessary.
+
+# Admin Login page
+def admin_page():
+    st.title("Admin Login")
+    st.markdown("<div style='margin-bottom: 20px;'>Please enter your admin credentials to access the Autism Dashboard.</div>", unsafe_allow_html=True)
+
+    # Input fields for username and password
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    # Hardcoded admin credentials (replace with secure storage in production)
+    admin_credentials = {
+        "admin": "admin123"  # Username: admin, Password: admin123
+    }
+
+    # Login button
+    if st.button("Login"):
+        if username in admin_credentials and password == admin_credentials[username]:
+            # Set session state on successful login
+            st.session_state["authenticated"] = True
+            st.session_state["page"] = "Dashboard"  # Set page to Dashboard
+            st.success("Login successful! Redirecting to the Dashboard...")
+            time.sleep(2)  # Optional delay for a smooth transition
+            st.rerun()  # Rerun the app to go to Dashboard
+        else:
+            st.error("Invalid username or password. Please try again.")
+
+# Dashboard page
+def dashboard_page():
+    # Check if user is authenticated
+    if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+        # If not authenticated, redirect to the login page
+        admin_page()
+    else:
+        # If authenticated, show the dashboard
+        st.title("Real-time Dashboard")
+        st.write("Welcome to the admin dashboard!")
+
+        
+        # Add a logout button
+        if st.button("Logout"):
+            st.session_state["authenticated"] = False  # Clear authentication state
+            st.success("You have been logged out.")
+            st.rerun()  # Rerun to show the login page
+
+        
+        # Fetch data from the database
+        with closing(create_connection()) as conn:
+            with conn.cursor() as c:
+                c.execute('SELECT * FROM results')  # Adjust your SQL query as needed
+                rows = c.fetchall()
+                # Create a dataframe from the query results
+                df = pd.DataFrame(rows, columns=[
+                    'Name', 'Age', 'Gender', 'State', 'Classification', 'total_score', 
+                    'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'Q13', 'Diagnosis'
+                ])
+        
+        # Convert `total_score` column to numeric for calculations
+        df['total_score'] = pd.to_numeric(df['total_score'], errors='coerce')
+
+        # Display the data as a table
+        st.subheader("Toddlers Data")
         st.dataframe(df)
+
+        # Display the classification distribution as a bar chart
+        st.subheader("Classification Distribution")
         classification_counts = df['Classification'].value_counts()
         st.bar_chart(classification_counts)
-        st.write("### State Distribution")
+
+        # Display state distribution as a bar chart
+        st.subheader("State Distribution")
         state_counts = df['State'].value_counts()
         st.bar_chart(state_counts)
 
+        # Optionally, allow filtering data by state or classification
+        st.subheader("Filter Data")
+        selected_state = st.selectbox("Select State", df['State'].unique())
+        filtered_data = df[df['State'] == selected_state]
+        st.write(f"Showing data for {selected_state} state:")
+        st.dataframe(filtered_data)
+
+        # Additional functionality could be added here, such as:
+        # - Time-series data visualizations
+        # - Predictions/analytics
+        # - More advanced filtering options
+
+def autism_protocols_page():
+    st.title("Autism Health Services Protocols")
+    
+    # Content description for the protocols in a styled box
+    content = """
+    <div style="border: 2px solid #008080; padding: 20px; background-color: #e0f7fa; font-size: 20px; color: #333;">
+        <strong>Here are the steps to access autism health services:</strong>
+        <ol>
+            <li>Go to the nearest clinic.</li>
+            <li>Get an appointment for a consultation.</li>
+            <li>Follow through with the necessary diagnostic evaluations.</li>
+            <li>Consult with specialists for therapy and interventions.</li>
+        </ol>
+        <p><strong>For more detailed information on autism services, visit the following link:</strong></p>
+        <p><a href="https://www.nasom.org.my/our-centres/" target="_blank" style="color: #00796b; font-size: 18px;">Click here for autism service centers</a></p>
+    </div>
+    """
+
+    # Display the content with the styling
+    st.markdown(content, unsafe_allow_html=True)
+
+
+# Main function to handle page routing
 def main():
+    # Initialize session state if not set
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+
+    # Sidebar for navigation
     st.sidebar.title("Navigation")
-    page = st.sidebar.selectbox("Go to", ["Welcome", "Autism Prediction", "Result", "Dashboard"])
+    page = st.sidebar.selectbox("Go to", ["Welcome", "Autism Quick Screen", "Autism Result", "Autism Health Services Protocols", "Autism Dashboard"])
+
+    # Additional sidebar information
     st.sidebar.caption(
         "<div style='text-align: justify;'>"
         "Welcome to the Quick Screen Autism Traits Predictor. This app is designed to predict autism traits using a machine learning model integrated with expert insights. Its goal is to offer a more efficient and simplified alternative to traditional autism screening, providing reliable and accurate results to support early decision-making."
         "</div>",
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
     st.sidebar.image("umpsa.png", use_column_width=True)
     st.sidebar.image("psis2019.png", use_column_width=True)
 
+    # Page routing based on selected option
     if page == "Welcome":
-        main_menu()
-    elif page == "Autism Prediction":
-        prediction_page()
-    elif page == "Result":
-        result_page()
-    elif page == "Dashboard":
-        dashboard_page()
-
-   # st.markdown("""<div style='text-align: center; margin-top: 50px;'><p style='font-size: 14px;'><b>SAieML: Developed by [Ts. Ainie Hayati Noruzman][ainie_hayati@psis.edu.my]©[2024]</p></div>""", unsafe_allow_html=True)
-
-    st.markdown(
-    """ <div style='text-align: center; background-color: rgba(75, 75, 75, 0.5); padding: 2px; border: 2px solid #A6A6A6; border-radius: 5px; margin-top: 15px;'>
-    <p style='color: white;'>© 2024 QuickScreen: Expert-Guided Autism Insight.[ainie_hayati@psis.edu.my] All rights reserved.</p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+        main_menu()  # Define the main menu function
+    elif page == "Autism Quick Screen":
+        prediction_page()  # Define the prediction page function
+    elif page == "Autism Result":
+        result_page()  # Define the result page function
+    elif page == "Autism Health Services Protocols":
+        autism_protocols_page()  # Display autism protocols page
+    elif page == "Autism Dashboard":
+        # Check if user is authenticated
+        if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
+            # If not authenticated, show the login page first
+            admin_page()
+        else:
+            # If authenticated, show the dashboard
+            dashboard_page()
     
 
+    # Footer
+    st.markdown(
+        """ <div style='text-align: center; background-color: rgba(75, 75, 75, 0.5); padding: 2px; border: 2px solid #A6A6A6; border-radius: 5px; margin-top: 15px;'>
+        <p style='color: white;'>© 2024 QuickScreen: Expert-Guided Autism Insight.[ainie_hayati@psis.edu.my] All rights reserved.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+# Run the application
 if __name__ == "__main__":
     main()
