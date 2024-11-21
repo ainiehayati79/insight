@@ -153,7 +153,7 @@ items = [
 
 def create_connection():
     # Retrieve DATABASE_URL from environment, use external or internal URL as appropriate
-    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://quickscreen_user:gFKXmyrBnQPtad3OS3s1AehpJJdkPoJA@dpg-csf1f8u8ii6s739abkf0-a.oregon-postgres.render.com/quickscreen")
+    DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://asdquickscreen_user:oK8xjXbSx4ydFLvsohc6sG7pazUD4LXM@dpg-csvj2btumphs7386pc00-a.oregon-postgres.render.com/asdquickscreen")
     return psycopg2.connect(DATABASE_URL)
 
 
